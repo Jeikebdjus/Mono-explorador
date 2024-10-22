@@ -1,0 +1,158 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mika el Mono Aventurero</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background-color: #a3d9ff;
+        }
+
+        #gameArea {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        canvas {
+            border: 3px solid #333;
+            background-color: #70c1b3; /* Color de la selva */
+        }
+    </style>
+</head>
+<body>
+    <h1>Mika el Mono Aventurero</h1>
+    <div id="gameArea">
+        <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = 800;
+        canvas.height = 400;
+
+        let monkey = {
+            x: 50,
+            y: 300,
+            width: 50,
+            height: 50,
+            dy: 0,
+            gravity: 0.6,
+            jumpPower: -10,
+            isJumping: false
+        };
+
+        let bananas = [];
+        let obstacles = [];
+        let score = 0;
+        let gameSpeed = 3;
+
+        // Eventos de salto
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !monkey.isJumping) {
+                monkey.isJumping = true;
+                monkey.dy = monkey.jumpPower;
+            }
+        });
+
+        function createBanana() {
+            bananas.push({
+                x: canvas.width,
+                y: Math.random() * (canvas.height - 50),
+                width: 30,
+                height: 30
+            });
+        }
+
+        function createObstacle() {
+            obstacles.push({
+                x: canvas.width,
+                y: canvas.height - 50,
+                width: 50,
+                height: 50
+            });
+        }
+
+        function updateGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Gravedad
+            monkey.dy += monkey.gravity;
+            monkey.y += monkey.dy;
+
+            // Límite del suelo
+            if (monkey.y + monkey.height > canvas.height) {
+                monkey.y = canvas.height - monkey.height;
+                monkey.isJumping = false;
+            }
+
+            // Dibujar mono
+            ctx.fillStyle = 'brown';
+            ctx.fillRect(monkey.x, monkey.y, monkey.width, monkey.height);
+
+            // Dibujar bananas y comprobar colisiones
+            bananas.forEach((banana, index) => {
+                banana.x -= gameSpeed;
+                ctx.fillStyle = 'yellow';
+                ctx.fillRect(banana.x, banana.y, banana.width, banana.height);
+
+                if (banana.x + banana.width < 0) {
+                    bananas.splice(index, 1); // Eliminar banana si sale del canvas
+                }
+
+                // Comprobar colisión con el mono
+                if (monkey.x < banana.x + banana.width &&
+                    monkey.x + monkey.width > banana.x &&
+                    monkey.y < banana.y + banana.height &&
+                    monkey.y + monkey.height > banana.y) {
+                    bananas.splice(index, 1);
+                    score++;
+                }
+            });
+
+            // Dibujar obstáculos y comprobar colisiones
+            obstacles.forEach((obstacle, index) => {
+                obstacle.x -= gameSpeed;
+                ctx.fillStyle = 'red';
+                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+
+                if (obstacle.x + obstacle.width < 0) {
+                    obstacles.splice(index, 1); // Eliminar obstáculo si sale del canvas
+                }
+
+                // Comprobar colisión con el mono
+                if (monkey.x < obstacle.x + obstacle.width &&
+                    monkey.x + monkey.width > obstacle.x &&
+                    monkey.y < obstacle.y + obstacle.height &&
+                    monkey.y + monkey.height > obstacle.y) {
+                    // Fin del juego
+                    alert('¡Has perdido! Puntuación: ' + score);
+                    document.location.reload();
+                }
+            });
+
+            // Actualizar puntaje
+            ctx.fillStyle = 'black';
+            ctx.font = '20px Arial';
+            ctx.fillText('Puntuación: ' + score, 10, 20);
+
+            // Crear nuevas bananas y obstáculos
+            if (Math.random() < 0.01) createBanana();
+            if (Math.random() < 0.01) createObstacle();
+
+            requestAnimationFrame(updateGame);
+        }
+
+        // Iniciar juego
+        updateGame();
+    </script>
+</body>
+</html>
